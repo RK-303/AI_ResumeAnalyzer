@@ -1,0 +1,39 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Backend API layer: all Next.js App Router API route handlers plus in-memory data stores. Depends on FEAT-001 (types, lib files, auth). Creates the complete REST-style API for auth, resumes, analysis, progress, and profile. All data stored in module-level Maps (in-memory MVP). Every API uses Next.js 16 async patterns.",
+  "status": "completed",
+  "steps": [
+    "Step 1 — Create lib/store.ts (in-memory data store). Define and export module-level Maps with clear comments to replace with DB later: usersMap = new Map<string, StoredUser>(), resumesMap = new Map<string, Resume>(), analysesMap = new Map<string, Analysis>(), progressMap = new Map<string, ProgressEntry[]>(). Define StoredUser interface as User & { passwordHash: string }. On module initialization, seed with the demo user: hash 'demo123' with bcryptjs and store with email='demo@example.com', name='Alex Johnson', id='demo-user-id'. Also seed DEMO_RESUME and DEMO_ANALYSIS from lib/demo-data.ts indexed under 'demo-user-id'. Export typed getter/setter functions: getUser(id), getUserByEmail(email), createUser(email, name, passwordHash), getResume(id), getUserResumes(userId), createResume(resume), getAnalysis(id), getUserAnalyses(userId), createAnalysis(analysis), getUserProgress(userId), addProgressEntry(userId, entry). Files: lib/store.ts",
+    "Step 2 — Create app/api/auth/register/route.ts. Export async POST(request: NextRequest). Parse JSON body { email, name, password }. Validate with zod schema. Check email not already taken via getUserByEmail(). Hash password with bcryptjs.hash(password, 10). Create user via createUser(). Sign JWT via signJWT(user.id). Build NextResponse with user data (no passwordHash). Set auth cookie. Return 201 with { success: true, data: { user } }. Files: app/api/auth/register/route.ts",
+    "Step 3 — Create app/api/auth/login/route.ts. Export async POST(request: NextRequest). Parse JSON { email, password }. Find user via getUserByEmail(). Compare password with bcryptjs.compare(). On success, sign JWT, set cookie, return user data. On failure return 401 { success: false, error: 'Invalid credentials' }. Files: app/api/auth/login/route.ts",
+    "Step 4 — Create app/api/auth/me/route.ts. Export async GET(request: NextRequest). Read auth cookie from request.cookies (synchronous on NextRequest). Verify JWT. Return user data or 401. Files: app/api/auth/me/route.ts",
+    "Step 5 — Create app/api/auth/logout/route.ts. Export async POST(request: NextRequest). Build NextResponse, call clearAuthCookie(response), return { success: true }. Files: app/api/auth/logout/route.ts",
+    "Step 6 — Create app/api/resumes/route.ts. Export async GET (return user's resumes) and async POST (upload + parse resume). POST accepts multipart/form-data with 'file' field. Use request.formData(). Get file as File object. Check size <= 5MB and type is PDF/DOCX/TXT. Convert to ArrayBuffer. Call parseResume(buffer, mimeType) from lib/resume-parser.ts. Call extractResumeData(text). Build Resume object with uuid(). Store via createResume(). Return parsed resume data. Files: app/api/resumes/route.ts",
+    "Step 7 — Create app/api/resumes/[id]/route.ts. Export async GET (return specific resume) and async PUT (update resume data — for edit mode). In Next.js 16: params is a Promise, so: export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) { const { id } = await params; ... }. Files: app/api/resumes/[id]/route.ts",
+    "Step 8 — Create app/api/jobs/route.ts. Export async POST to save a job description. Parse { description, targetRole }. Store in a jobsMap (add to store.ts). Return { id, description, targetRole }. Files: app/api/jobs/route.ts",
+    "Step 9 — Create app/api/analysis/route.ts. Export async POST(request: NextRequest). Parse { resumeId, jobDescription, targetRole }. Fetch resume from store. Call analyzeResume(resumeText, jobDescription, targetRole) from lib/mock-analyzer.ts. Add analysis to store. Add progress entry for this user. Return { analysisId }. Files: app/api/analysis/route.ts",
+    "Step 10 — Create app/api/analysis/[id]/route.ts. Export async GET to return full analysis by id. Next.js 16 async params: const { id } = await params. Check auth cookie, verify ownership if needed. Return full Analysis object. Files: app/api/analysis/[id]/route.ts",
+    "Step 11 — Create app/api/progress/route.ts. Export async GET. Read auth, return user's progress entries (score history for charts). Files: app/api/progress/route.ts",
+    "Step 12 — Create app/api/profile/route.ts. Export async GET (return user profile) and async PUT (update name, targetRole). Files: app/api/profile/route.ts",
+    "Step 13 — Create hooks/useAuth.ts. 'use client'. Export useAuth() hook: state { user: AuthUser | null, loading: boolean }. On mount, fetch GET /api/auth/me. Expose login(email, password), register(email, name, password), logout() functions that call the API endpoints and update state. Also export an AuthContext and AuthProvider. Files: hooks/useAuth.ts",
+    "Step 14 — Create hooks/useResume.ts. 'use client'. Export useResume() hook: state { resumes, loading, uploading, error }. Expose uploadResume(file: File), getResume(id), updateResume(id, data) functions. Files: hooks/useResume.ts",
+    "Step 15 — Create hooks/useAnalysis.ts. 'use client'. Export useAnalysis() hook: state { analyses, currentAnalysis, loading, analyzing }. Expose runAnalysis(resumeId, jobDescription, targetRole), getAnalysis(id), getAnalyses() functions. Files: hooks/useAnalysis.ts"
+  ],
+  "acceptance_criteria": [
+    "All API routes compile with zero TypeScript errors",
+    "POST /api/auth/register creates a user and returns JWT cookie",
+    "POST /api/auth/login with demo@example.com / demo123 succeeds",
+    "GET /api/auth/me returns user when authenticated",
+    "POST /api/resumes handles file upload and returns parsed resume data",
+    "POST /api/analysis runs mock analyzer and returns an analysis ID",
+    "GET /api/analysis/[id] returns full Analysis object",
+    "All Next.js 16 async params patterns are used correctly (params is awaited)",
+    "npm run build passes with zero errors"
+  ],
+  "verification": [
+    "cd C:/Users/kolte/AIresume/AI_ResumeAnalyzer && npm run build -- must complete with no TypeScript errors across all API routes"
+  ],
+  "blocked_reason": null,
+  "findings": "1) useAuth must be a .tsx file (not .ts) because it contains JSX for AuthProvider — renamed to hooks/useAuth.tsx. 2) ZodError in this project's Zod version uses .issues[0] not .errors[0] — all route validators updated. 3) lib/store.ts uses a module-level seed promise (not top-level await) for compatibility with CJS/ESM. 4) bcryptjs seeding is async — ensureSeeded() guard used in every store getter/setter to guarantee seed completes before first access. 5) All Next.js 16 async params patterns correctly applied: params is awaited in [id] route handlers. 6) request.cookies.get() is used (synchronous on NextRequest) — no async cookies() import needed in API routes. 7) npm run build completes with zero TypeScript errors; all 13 API routes appear in the route table as dynamic (ƒ)."
+}
