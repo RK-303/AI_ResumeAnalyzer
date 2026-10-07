@@ -1,0 +1,66 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* Deep navy dark theme */
+  /* #0a0f1e -> oklch(8.5% 0.03 252) */
+  --background: oklch(8.5% 0.03 252);
+  /* #0d1425 -> oklch(10% 0.04 252) */
+  --card: oklch(10% 0.04 252);
+  --card-foreground: oklch(95% 0.01 252);
+  /* #0d1425 same as card */
+  --popover: oklch(10% 0.04 252);
+  --popover-foreground: oklch(95% 0.01 252);
+  /* #2563eb -> oklch(50% 0.2 262) electric blue */
+  --primary: oklch(50% 0.2 262);
+  --primary-foreground: oklch(98% 0.005 0);
+  /* #7c3aed -> oklch(45% 0.22 290) violet */
+  --secondary: oklch(45% 0.22 290);
+  --secondary-foreground: oklch(98% 0.005 0);
+  --muted: oklch(18% 0.03 252);
+  --muted-foreground: oklch(65% 0.02 252);
+  --accent: oklch(18% 0.05 262);
+  --accent-foreground: oklch(95% 0.01 252);
+  --destructive: oklch(55% 0.22 27);
+  /* #1e2d4a -> oklch(22% 0.05 252) */
+  --border: oklch(22% 0.05 252);
+  --input: oklch(22% 0.05 252);
+  --ring: oklch(50% 0.2 262);
+
+  --foreground: oklch(95% 0.01 252);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
