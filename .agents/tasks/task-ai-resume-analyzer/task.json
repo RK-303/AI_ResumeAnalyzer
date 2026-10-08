@@ -1,0 +1,13 @@
+{
+  "task_id": "task-ai-resume-analyzer",
+  "task_description": "Build a complete production-quality MVP full-stack web application called 'AI Resume Analyzer' inside an existing Next.js 16.3.5 App Router project. The app analyzes resumes against job descriptions, detects skill gaps, scores ATS compatibility, and recommends resources/projects/career actions. All features use in-memory storage, a deterministic mock AI analyzer, and JWT cookie auth. No external API key required.",
+  "status": "pending",
+  "feature_order": [
+    "FEAT-001",
+    "FEAT-002",
+    "FEAT-003",
+    "FEAT-004",
+    "FEAT-005"
+  ],
+  "blocked_reason": null
+}
